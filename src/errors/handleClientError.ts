@@ -11,7 +11,7 @@ const handleClientError = (error: Prisma.PrismaClientKnownRequestError): IGeneri
 
     return {
         statusCode: 400,
-        message: "Cast Error",
+        message: "Client Error",
         errorMessages: errors,
     };
 };
