@@ -9,6 +9,8 @@ router.post("/create-book", validateRequest(BookValidation.createBook), BookCont
 
 router.get("", BookController.getAllBook);
 
+router.get("/:categoryId/category", BookController.getSingleCategoryBook);
+
 router.get("/:id", BookController.getSingleBook);
 
 router.patch("/:id", validateRequest(BookValidation.updateBook), BookController.updateBook);

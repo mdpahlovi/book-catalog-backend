@@ -18,7 +18,7 @@ const createBook = async (payload: Book): Promise<Book> => {
     return result;
 };
 
-const getAllBooks = async (filters: IBookFilterRequest, options: IPaginationOptions): Promise<IGenericResponse<Book[]>> => {
+const getAllBook = async (filters: IBookFilterRequest, options: IPaginationOptions): Promise<IGenericResponse<Book[]>> => {
     const { search, category, minPrice, maxPrice } = filters;
     const { size, page, skip } = paginationHelpers.calculatePagination(options);
 
@@ -41,6 +41,39 @@ const getAllBooks = async (filters: IBookFilterRequest, options: IPaginationOpti
     }
 
     const where: Prisma.BookWhereInput = andConditions.length > 0 ? { AND: andConditions } : {};
+    const orderBy: Prisma.BookOrderByWithRelationInput =
+        options.sortBy && options.sortOrder ? { [options.sortBy]: options.sortOrder } : { publicationDate: "desc" };
+
+    const result = await prisma.book.findMany({ include: { category: true }, where, skip, take: size, orderBy });
+
+    const total = await prisma.book.count({ where });
+
+    return { meta: { page, size, total, totalPage: Math.ceil(total / size) }, data: result };
+};
+
+const getSingleCategoryBook = async (
+    categoryId: string,
+    filters: IBookFilterRequest,
+    options: IPaginationOptions,
+): Promise<IGenericResponse<Book[]>> => {
+    const { search, minPrice, maxPrice } = filters;
+    const { size, page, skip } = paginationHelpers.calculatePagination(options);
+
+    const andConditions = [];
+
+    if (search) {
+        andConditions.push(searchQuery(search, bookSearchableFields));
+    }
+
+    if (minPrice) {
+        andConditions.push({ price: { gte: Number(minPrice) } });
+    }
+
+    if (maxPrice) {
+        andConditions.push({ price: { lte: Number(maxPrice) } });
+    }
+
+    const where: Prisma.BookWhereInput = andConditions.length > 0 ? { AND: [{ categoryId }, ...andConditions] } : { categoryId };
     const orderBy: Prisma.BookOrderByWithRelationInput =
         options.sortBy && options.sortOrder ? { [options.sortBy]: options.sortOrder } : { publicationDate: "desc" };
 
@@ -80,7 +113,8 @@ const deleteBook = async (id: string): Promise<Book> => {
 
 export const BookService = {
     createBook,
-    getAllBooks,
+    getAllBook,
+    getSingleCategoryBook,
     getSingleBook,
     updateBook,
     deleteBook,
