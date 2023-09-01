@@ -7,6 +7,8 @@ const router = express.Router();
 
 router.post("/create-book", validateRequest(BookValidation.createBook), BookController.createBook);
 
+router.get("", BookController.getAllBook);
+
 router.get("/:id", BookController.getSingleBook);
 
 router.patch("/:id", validateRequest(BookValidation.updateBook), BookController.updateBook);
