@@ -8,16 +8,16 @@ datasource db {
 }
 
 model User {
-    id              String            @id @default(uuid())
-    name            String
-    email           String            @unique
-    password        String
-    role            Role
-    contactNo       String
-    address         String
-    profileImg      String
-    ReviewAndRating ReviewAndRating[]
-    Order           Order[]
+    id         String            @id @default(uuid())
+    name       String
+    email      String            @unique
+    password   String
+    role       Role
+    contactNo  String
+    address    String
+    profileImg String
+    reviews    ReviewAndRating[]
+    orders     Order[]
 
     @@map("users")
 }
@@ -25,7 +25,7 @@ model User {
 model Category {
     id    String @id @default(uuid())
     title String
-    Book  Book[]
+    books Book[]
 
     @@map("categories")
 }
@@ -39,8 +39,8 @@ model Book {
     publicationDate DateTime
     categoryId      String
     category        Category          @relation(fields: [categoryId], references: [id])
-    ReviewAndRating ReviewAndRating[]
-    OrderedBook     OrderedBook[]
+    reviews         ReviewAndRating[]
+    orderedBooks    OrderedBook[]
 
     @@map("books")
 }
@@ -76,7 +76,7 @@ model OrderedBook {
     order    Order  @relation(fields: [orderId], references: [id])
     book     Book   @relation(fields: [bookId], references: [id])
 
-    @@map("orderedbooks")
+    @@map("orderedBooks")
 }
 
 enum Role {
