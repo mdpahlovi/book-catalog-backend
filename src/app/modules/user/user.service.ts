@@ -1,6 +1,7 @@
 import { User } from "@prisma/client";
 import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiError";
+import { bcryptHelpers } from "../../../helpers/bcryptHelpers";
 import prisma from "../../../shared/prisma";
 
 const getAllUser = async (): Promise<Partial<User>[]> => {
@@ -25,6 +26,10 @@ const getSingleUser = async (id: string): Promise<Partial<User>> => {
 };
 
 const updateUser = async (id: string, payload: Partial<User>): Promise<Partial<User>> => {
+    if (payload?.password) {
+        payload.password = await bcryptHelpers.hashPassword(payload.password);
+    }
+
     const result = await prisma.user.update({
         where: { id },
         data: payload,

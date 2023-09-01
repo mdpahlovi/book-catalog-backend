@@ -1,16 +1,18 @@
 import express from "express";
+import { USER_ROLE } from "../../../enums/user";
+import auth from "../../middlewares/auth";
 import validateRequest from "../../middlewares/validateRequest";
 import { UserController } from "./user.controller";
 import { UserValidation } from "./user.validation";
 
 const router = express.Router();
 
-router.get("", UserController.getAllUser);
+router.get("", auth(USER_ROLE.ADMIN), UserController.getAllUser);
 
-router.get("/:id", UserController.getSingleUser);
+router.get("/:id", auth(USER_ROLE.ADMIN), UserController.getSingleUser);
 
-router.patch("/:id", validateRequest(UserValidation.updateUser), UserController.updateUser);
+router.patch("/:id", auth(USER_ROLE.ADMIN), validateRequest(UserValidation.updateUser), UserController.updateUser);
 
-router.delete("/:id", UserController.deleteUser);
+router.delete("/:id", auth(USER_ROLE.ADMIN), UserController.deleteUser);
 
 export const UserRoutes = router;
