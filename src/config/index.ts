@@ -10,5 +10,6 @@ export default {
     database_url: process.env.DATABASE_URL,
     jwt: {
         secret: process.env.SECRET,
+        expires_in: process.env.EXPIRES_IN,
     },
 };
