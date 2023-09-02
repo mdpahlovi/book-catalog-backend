@@ -1,17 +1,17 @@
 import { User } from "@prisma/client";
 import httpStatus from "http-status";
+import { JwtPayload } from "jsonwebtoken";
 import ApiError from "../../../errors/ApiError";
 import { exclude } from "../../../helpers/exclude";
-import { JwtUser } from "../../../interfaces";
 import prisma from "../../../shared/prisma";
 
-const getUserProfile = async (jwtUser: JwtUser | null): Promise<Omit<User, "id" | "password">> => {
+const getUserProfile = async (jwtPayload: JwtPayload | null): Promise<Omit<User, "id" | "password">> => {
     let user;
-    if (jwtUser?.userId) {
-        user = await prisma.user.findUnique({ where: { id: jwtUser.userId } });
+    if (jwtPayload?.userId) {
+        user = await prisma.user.findUnique({ where: { id: jwtPayload.userId } });
     }
 
-    if (!jwtUser || !user) {
+    if (!jwtPayload || !user) {
         throw new ApiError(httpStatus.NOT_FOUND, "Failed to get user");
     }
 

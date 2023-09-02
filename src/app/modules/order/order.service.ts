@@ -1,14 +1,14 @@
 import { Order, OrderedBook } from "@prisma/client";
 import httpStatus from "http-status";
+import { JwtPayload } from "jsonwebtoken";
 import { USER_ROLE } from "../../../enums/user";
 import ApiError from "../../../errors/ApiError";
-import { JwtUser } from "../../../interfaces";
 import { asyncForEach } from "../../../shared/asyncForEach";
 import prisma from "../../../shared/prisma";
 
-const createOrder = async (user: JwtUser, { orderedBooks }: { orderedBooks: OrderedBook[] }): Promise<Order> => {
+const createOrder = async (user: JwtPayload | null, { orderedBooks }: { orderedBooks: OrderedBook[] }): Promise<Order> => {
     const result = await prisma.$transaction(async transactionClient => {
-        const newOrder = await transactionClient.order.create({ data: { userId: user.userId } });
+        const newOrder = await transactionClient.order.create({ data: { userId: user?.userId as string } });
 
         asyncForEach<OrderedBook>(orderedBooks, async (orderedBook: OrderedBook) => {
             await transactionClient.orderedBook.create({
@@ -35,7 +35,7 @@ const createOrder = async (user: JwtUser, { orderedBooks }: { orderedBooks: Orde
     return result;
 };
 
-const getAllOrder = async (user: JwtUser | null): Promise<Order[]> => {
+const getAllOrder = async (user: JwtPayload | null): Promise<Order[]> => {
     let result;
 
     if (user?.role === USER_ROLE.ADMIN) {
@@ -55,7 +55,7 @@ const getAllOrder = async (user: JwtUser | null): Promise<Order[]> => {
     return result;
 };
 
-const getSingleOrder = async (id: string, user: JwtUser | null): Promise<Order> => {
+const getSingleOrder = async (id: string, user: JwtPayload | null): Promise<Order> => {
     let result;
 
     if (user?.role === USER_ROLE.ADMIN) {
