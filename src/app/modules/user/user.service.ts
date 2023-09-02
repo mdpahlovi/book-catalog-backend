@@ -2,48 +2,44 @@ import { User } from "@prisma/client";
 import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiError";
 import { bcryptHelpers } from "../../../helpers/bcryptHelpers";
+import { exclude } from "../../../helpers/exclude";
 import prisma from "../../../shared/prisma";
 
-const getAllUser = async (): Promise<Partial<User>[]> => {
-    const result = await prisma.user.findMany({
-        select: { id: true, name: true, email: true, role: true, contactNo: true, address: true, profileImg: true },
-    });
+const getAllUser = async (): Promise<Omit<User, "password">[]> => {
+    const users = await prisma.user.findMany();
+    const result = users.map(user => exclude(user, ["password"]));
 
     return result;
 };
 
-const getSingleUser = async (id: string): Promise<Partial<User>> => {
-    const result = await prisma.user.findUnique({
-        where: { id },
-        select: { id: true, name: true, email: true, role: true, contactNo: true, address: true, profileImg: true },
-    });
+const getSingleUser = async (id: string): Promise<Omit<User, "password">> => {
+    const user = await prisma.user.findUnique({ where: { id } });
 
-    if (!result) {
+    if (!user) {
         throw new ApiError(httpStatus.NOT_FOUND, "Failed to get user");
     }
 
+    const result = exclude(user, ["password"]);
+
     return result;
 };
 
-const updateUser = async (id: string, payload: Partial<User>): Promise<Partial<User>> => {
+const updateUser = async (id: string, payload: Partial<User>): Promise<Omit<User, "password">> => {
     if (payload?.password) {
         payload.password = await bcryptHelpers.hashPassword(payload.password);
     }
 
-    const result = await prisma.user.update({
-        where: { id },
-        data: payload,
-        select: { id: true, name: true, email: true, role: true, contactNo: true, address: true, profileImg: true },
-    });
+    const user = await prisma.user.update({ where: { id }, data: payload });
+
+    const result = exclude(user, ["password"]);
 
     return result;
 };
 
-const deleteUser = async (id: string): Promise<Partial<User>> => {
-    const result = await prisma.user.delete({
-        where: { id },
-        select: { id: true, name: true, email: true, role: true, contactNo: true, address: true, profileImg: true },
-    });
+const deleteUser = async (id: string): Promise<Omit<User, "password">> => {
+    const user = await prisma.user.delete({ where: { id } });
+
+    const result = exclude(user, ["password"]);
 
     return result;
 };

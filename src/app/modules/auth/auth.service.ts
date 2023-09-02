@@ -4,16 +4,16 @@ import { Secret } from "jsonwebtoken";
 import config from "../../../config";
 import ApiError from "../../../errors/ApiError";
 import { bcryptHelpers } from "../../../helpers/bcryptHelpers";
+import { exclude } from "../../../helpers/exclude";
 import { jwtHelpers } from "../../../helpers/jwtHelpers";
 import prisma from "../../../shared/prisma";
 
-const createUser = async (payload: User): Promise<Partial<User>> => {
+const createUser = async (payload: User): Promise<Omit<User, "password">> => {
     payload.password = await bcryptHelpers.hashPassword(payload.password);
 
-    const result = await prisma.user.create({
-        data: payload,
-        select: { id: true, name: true, email: true, role: true, contactNo: true, address: true, profileImg: true },
-    });
+    const user = await prisma.user.create({ data: payload });
+
+    const result = exclude(user, ["password"]);
 
     return result;
 };
