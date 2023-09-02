@@ -21,7 +21,7 @@ const getAllOrder = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,
-        message: "Orders fetched successfully",
+        message: "Orders retrieved successfully",
         data: result,
     });
 });

@@ -1,13 +1,12 @@
 import { Book, Prisma } from "@prisma/client";
 import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiError";
-import { paginationHelpers } from "../../../helpers/paginationHelper";
+import { IOptions, calculateOptions } from "../../../helpers/paginationHelper";
 import { searchQuery } from "../../../helpers/searchQuery";
 import { IGenericResponse } from "../../../interfaces/common";
-import { IPaginationOptions } from "../../../interfaces/pagination";
 import prisma from "../../../shared/prisma";
 import { bookSearchableFields } from "./book.constant";
-import { IBookFilterRequest } from "./book.interface";
+import { IBookFilter } from "./book.interface";
 
 const createBook = async (payload: Book): Promise<Book> => {
     const result = await prisma.book.create({
@@ -18,9 +17,9 @@ const createBook = async (payload: Book): Promise<Book> => {
     return result;
 };
 
-const getAllBook = async (filters: IBookFilterRequest, options: IPaginationOptions): Promise<IGenericResponse<Book[]>> => {
+const getAllBook = async (filters: IBookFilter, options: IOptions): Promise<IGenericResponse<Book[]>> => {
     const { search, category, minPrice, maxPrice } = filters;
-    const { size, page, skip } = paginationHelpers.calculatePagination(options);
+    const { size, page, skip, sortBy, sortOrder } = calculateOptions(options);
 
     const andConditions = [];
 
@@ -40,9 +39,8 @@ const getAllBook = async (filters: IBookFilterRequest, options: IPaginationOptio
         andConditions.push({ price: { lte: Number(maxPrice) } });
     }
 
-    const where: Prisma.BookWhereInput = andConditions.length > 0 ? { AND: andConditions } : {};
-    const orderBy: Prisma.BookOrderByWithRelationInput =
-        options.sortBy && options.sortOrder ? { [options.sortBy]: options.sortOrder } : { publicationDate: "desc" };
+    const where: Prisma.BookWhereInput = { AND: andConditions };
+    const orderBy: Prisma.BookOrderByWithRelationInput = { [sortBy]: sortOrder };
 
     const result = await prisma.book.findMany({ include: { category: true }, where, skip, take: size, orderBy });
 
@@ -51,13 +49,9 @@ const getAllBook = async (filters: IBookFilterRequest, options: IPaginationOptio
     return { meta: { page, size, total, totalPage: Math.ceil(total / size) }, data: result };
 };
 
-const getSingleCategoryBook = async (
-    categoryId: string,
-    filters: IBookFilterRequest,
-    options: IPaginationOptions,
-): Promise<IGenericResponse<Book[]>> => {
+const getSingleCategoryBook = async (categoryId: string, filters: IBookFilter, options: IOptions): Promise<IGenericResponse<Book[]>> => {
     const { search, minPrice, maxPrice } = filters;
-    const { size, page, skip } = paginationHelpers.calculatePagination(options);
+    const { size, page, skip, sortBy, sortOrder } = calculateOptions(options);
 
     const andConditions = [];
 
@@ -73,9 +67,8 @@ const getSingleCategoryBook = async (
         andConditions.push({ price: { lte: Number(maxPrice) } });
     }
 
-    const where: Prisma.BookWhereInput = andConditions.length > 0 ? { AND: [{ categoryId }, ...andConditions] } : { categoryId };
-    const orderBy: Prisma.BookOrderByWithRelationInput =
-        options.sortBy && options.sortOrder ? { [options.sortBy]: options.sortOrder } : { publicationDate: "desc" };
+    const where: Prisma.BookWhereInput = { AND: [{ categoryId }, ...andConditions] };
+    const orderBy: Prisma.BookOrderByWithRelationInput = { [sortBy]: sortOrder };
 
     const result = await prisma.book.findMany({ include: { category: true }, where, skip, take: size, orderBy });
 

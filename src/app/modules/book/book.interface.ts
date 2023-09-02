@@ -1,4 +1,4 @@
-export type IBookFilterRequest = {
+export type IBookFilter = {
     search?: string;
     category?: string;
     minPrice?: string;
