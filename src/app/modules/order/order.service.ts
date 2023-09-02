@@ -3,34 +3,13 @@ import httpStatus from "http-status";
 import { JwtPayload } from "jsonwebtoken";
 import { USER_ROLE } from "../../../enums/user";
 import ApiError from "../../../errors/ApiError";
-import { asyncForEach } from "../../../shared/asyncForEach";
 import prisma from "../../../shared/prisma";
 
 const createOrder = async (user: JwtPayload | null, { orderedBooks }: { orderedBooks: OrderedBook[] }): Promise<Order> => {
-    const result = await prisma.$transaction(async transactionClient => {
-        const newOrder = await transactionClient.order.create({ data: { userId: user?.userId as string } });
-
-        asyncForEach<OrderedBook>(orderedBooks, async (orderedBook: OrderedBook) => {
-            await transactionClient.orderedBook.create({
-                data: {
-                    orderId: newOrder.id,
-                    bookId: orderedBook.bookId,
-                    quantity: orderedBook.quantity,
-                },
-            });
-        });
-
-        const result = await transactionClient.order.findUnique({
-            where: { id: newOrder.id },
-            include: { orderedBooks: { select: { bookId: true, quantity: true } } },
-        });
-
-        return result;
+    const result = await prisma.order.create({
+        data: { userId: user?.userId, orderedBooks: { createMany: { data: orderedBooks } } },
+        include: { orderedBooks: { select: { bookId: true, quantity: true } } },
     });
-
-    if (!result) {
-        throw new ApiError(httpStatus.FAILED_DEPENDENCY, "Failed to create order");
-    }
 
     return result;
 };
